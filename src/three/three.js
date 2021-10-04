@@ -22,6 +22,7 @@ import {
 } from 'three';
 import {loadModel} from './utils/3d';
 import OrbitControlsView from 'expo-three-orbit-controls';
+import ExpoRNCamera from './utils/Camera';
 
 const modelGLB = {
   icebear: {
@@ -163,11 +164,12 @@ onContextCreate = async (gl, data) => {
   // const {setRenderer, setCamera, setScene} = data;
   const {selected, setSceneCamera} = data;
   const {drawingBufferWidth: width, drawingBufferHeight: height} = gl;
-  const sceneColor = 0xabd2c3;
+  const sceneColor = 0x000000;
   // Create a WebGLRenderer without a DOM element
-  const renderer = new Renderer({gl});
+  const renderer = new Renderer({gl,alpha: true});
   renderer.setSize(width, height);
-  renderer.setClearColor(sceneColor);
+  renderer.setClearColor(0x000000, 0);
+  renderer.setClearAlpha(0)
 
   const isModelArray = selected?.models && Array.isArray(selected.models);
 
@@ -185,22 +187,22 @@ onContextCreate = async (gl, data) => {
 
   const scene = new Scene();
   setSceneCamera(camera);
-  const pointLight = new PointLight(0xffffff, 2, 1000, 1);
-  pointLight.position.set(0, 30, 100);
+  // const pointLight = new PointLight(0xffffff, 2, 1000, 1);
+  // pointLight.position.set(0, 30, 100);
   // scene.add(pointLight);
 
   // HemisphereLight - color feels nicer
-  const hemisphereLight = new HemisphereLight(0xffffbb, 0x080820, 1);
+  const hemisphereLight = new HemisphereLight(0xffffff, 0x080820, 1);
   scene.add(hemisphereLight);
   // AmbientLight - add more brightness?
-  const ambientLight = new AmbientLight(0x404040); // soft white light
-  scene.add(ambientLight);
+  // const ambientLight = new AmbientLight(0x404040); // soft white light
+  // scene.add(ambientLight);
 
   let models = [];
 
   if (isModelArray) {
     for (let i = 0; i < selected.models.length; i++) {
-      const modelItem = selected.models[i];
+      const model = selected.models[i];
       if (model) {
         scene.add(model);
         models.push(model);
@@ -216,6 +218,7 @@ onContextCreate = async (gl, data) => {
 
   function update() {
     if (isModelArray) {
+      console.log('updating' + Math.random());
       for (let i = 0; i < selected.models.length; i++) {
         if (models[i] && selected.models[i]?.animation) {
           if (selected.models[i].animation?.rotation?.x) {
@@ -228,6 +231,7 @@ onContextCreate = async (gl, data) => {
       }
     } else {
       if (models[0] && selected?.animation) {
+        // console.log('updating'+Math.random())
         if (selected.animation?.rotation?.x) {
           models[0].rotation.x += selected.animation?.rotation?.x;
         }
@@ -261,12 +265,13 @@ const RNThree = props => {
   const [sceneCamera, setSceneCamera] = useState(null);
   return (
     <View style={styles.container}>
-      <SafeAreaView backgroundColor={'#abd2c3'} />
+      <SafeAreaView />
+
       <View style={{flex: 1}}>
         {selected ? (
           // <OrbitControlsView camera={sceneCamera}>
           <GLView
-            style={{flex: 1}}
+            style={{flex:1}}
             onContextCreate={gl => {
               setGL(gl);
               onContextCreate(gl, {selected, setSceneCamera});
@@ -308,12 +313,12 @@ const RNThree = props => {
                     setSelected(x);
                   }, 200);
                 }}>
-                <Text>
+                <Text style={{color: '#f00'}}>
                   {x?.name} ({x?.type})
                 </Text>
               </TouchableOpacity>
             </View>
-          ))}          
+          ))}
         </ScrollView>
       </View>
     </View>
@@ -326,6 +331,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#abd2c3',
   },
 });

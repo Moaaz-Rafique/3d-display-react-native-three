@@ -12,12 +12,14 @@
   "dependencies": {
     "atob": "^2.1.2",
     "base64-arraybuffer": "^1.0.1",
+    "expo-camera": "^11.2.2",
     "expo-gl": "^10.4.2",
     "expo-gl-cpp": "^10.4.1",
     "expo-three": "^5.7.0",
     "expo-three-orbit-controls": "^2.0.0",
     "react": "17.0.1",
     "react-native": "0.64.2",
+    "react-native-gesture-handler": "^1.10.3",
     "react-native-unimodules": "^0.14.6",
     "three": "^0.131.2"
   },
