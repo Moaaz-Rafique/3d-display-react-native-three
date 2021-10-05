@@ -13,6 +13,7 @@ import {
   PinchGestureHandlerStateChangeEvent,
   RotationGestureHandlerStateChangeEvent,
 } from 'react-native-gesture-handler';
+import RNThree from '../../three';
 
 export class PinchableBox extends React.Component {
   private panRef = React.createRef();
@@ -77,6 +78,7 @@ export class PinchableBox extends React.Component {
     if (event.nativeEvent.oldState === State.ACTIVE) {
       this.lastRotate += event.nativeEvent.rotation;
       this.rotate.setOffset(this.lastRotate);
+      console.log(event.nativeEvent.rotation)
       this.rotate.setValue(0);
     }
   };
@@ -86,6 +88,7 @@ export class PinchableBox extends React.Component {
     if (event.nativeEvent.oldState === State.ACTIVE) {
       this.lastScale *= event.nativeEvent.scale;
       this.baseScale.setValue(this.lastScale);
+      console.log(event.nativeEvent.scale)
       this.pinchScale.setValue(1);
     }
   };
@@ -95,6 +98,7 @@ export class PinchableBox extends React.Component {
     if (event.nativeEvent.oldState === State.ACTIVE) {
       this.lastTilt += event.nativeEvent.translationY;
       this.tilt.setOffset(this.lastTilt);
+      console.log(event.nativeEvent.translationY)
       this.tilt.setValue(0);
     }
   };
@@ -121,21 +125,7 @@ export class PinchableBox extends React.Component {
                 onGestureEvent={this.onPinchGestureEvent}
                 onHandlerStateChange={this.onPinchHandlerStateChange}>
                 <Animated.View style={styles.container} collapsable={false}>
-                  <Animated.Image
-                    style={[
-                      styles.pinchableImage,
-                      {
-                        transform: [
-                          { perspective: 200 },
-                          { scale: this.scale },
-                          { rotate: this.rotateStr },
-                          { rotateX: this.tiltStr },
-                        ],
-                      },
-                    ]}
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    source={require('./swmansion.png')}
-                  />
+                  <RNThree scale={this.scale} rotateStr={this.rotateStr} tiltStr={this.tiltStr} />
                 </Animated.View>
               </PinchGestureHandler>
             </Animated.View>

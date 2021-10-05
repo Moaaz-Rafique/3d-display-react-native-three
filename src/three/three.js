@@ -21,11 +21,17 @@ import {
   PerspectiveCamera,
   PointLight,
   Scene,
+  Vector3,
 } from 'three';
 import {loadModel} from './utils/3d';
 import OrbitControlsView from 'expo-three-orbit-controls';
 import ExpoRNCamera from './utils/Camera';
 import {useRef} from 'react';
+import {
+  PinchGestureHandler,
+  PanGestureHandler,
+  State,
+} from 'react-native-gesture-handler';
 
 const modelGLB = {
   icebear: {
@@ -163,121 +169,128 @@ const modelFBX = {
   },
 };
 
-onContextCreate = async (gl, data) => {
-  // const {setRenderer, setCamera, setScene} = data;
-  const {selected, setSceneCamera, pan} = data;
-  const {drawingBufferWidth: width, drawingBufferHeight: height} = gl;
-  const sceneColor = 0x000000;
-  // Create a WebGLRenderer without a DOM element
-  const renderer = new Renderer({gl, alpha: true});
-  renderer.setSize(width, height);
-  renderer.setClearColor(0x000000, 0);
-  renderer.setClearAlpha(0);
+const RNThree = props => {
+  // const pan = useRef();
+  // const panResponder = useRef().current;
+  // const pinch = useRef(new Animated.Value(0)).current;
+  // const onPinchGestureEvent = Animated.event([{nativeEvent: {scale: pinch}}], {
+  //   useNativeDriver: true,
+  // });
+  // const onPinchHandlerStateChange = event => {
+  //   console.log(event);
+  //   if (event.nativeEvent.oldState === State.ACTIVE) {
+  //     console.log(event.nativeEvent.scale);
+  //     // baseScale.setValue();
+  //     // pinchScale.setValue(1);
+  //   }
+  // };
+  const {scale, rotateStr, tiltStr} = props;
 
-  const isModelArray = selected?.models && Array.isArray(selected.models);
+  const onContextCreate = async (gl, data) => {
+    // const {setRenderer, setCamera, setScene} = data;
+    const {selected, setSceneCamera} = data;
+    const {drawingBufferWidth: width, drawingBufferHeight: height} = gl;
+    const sceneColor = 0x000000;
+    // Create a WebGLRenderer without a DOM element
+    const renderer = new Renderer({gl, alpha: true});
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x000000, 0);
+    renderer.setClearAlpha(0);
 
-  let camera;
-  if (selected.isometric) {
-    // use this if wan isometric view
-    var aspect = width / height;
-    var d = 10;
-    camera = new OrthographicCamera(-d * aspect, d * aspect, d, -d, -10, 1000);
-  } else {
-    // use this if wan normal view
-    camera = new PerspectiveCamera(75, width / height, 0.1, 1000);
+    const isModelArray = selected?.models && Array.isArray(selected.models);
 
-    camera.position.set(0, 0, 10);
-  }
+    let camera;
+    if (selected.isometric) {
+      // use this if wan isometric view
+      var aspect = width / height;
+      var d = 10;
+      camera = new OrthographicCamera(
+        -d * aspect,
+        d * aspect,
+        d,
+        -d,
+        -10,
+        1000,
+      );
+    } else {
+      // use this if wan normal view
+      camera = new PerspectiveCamera(75, width / height, 0.1, 1000);
+      camera.position.set(0, 0, 10);
+    }
 
-  // console.log('thi is pan-------', pan.x, pan.y);
-  const scene = new Scene();
-  setSceneCamera(camera);
-  const pointLight = new PointLight(0xffffff, 2, 1000, 1);
-  pointLight.position.set(0, 30, 100);
-  scene.add(pointLight);
+    // console.log('thi is pan-------', pan.x, pan.y);
+    const scene = new Scene();
+    setSceneCamera(camera);
+    // const pointLight = new PointLight(0xffffff, 2, 1000, 1);
+    // pointLight.position.set(0, 30, 100);
+    // scene.add(pointLight);
 
-  // HemisphereLight - color feels nicer
-  const hemisphereLight = new HemisphereLight(0xffffff, 0x080820, 1);
-  scene.add(hemisphereLight);
-  // AmbientLight - add more brightness?
-  const ambientLight = new AmbientLight(0x404040); // soft white light
-  scene.add(ambientLight);
+    // HemisphereLight - color feels nicer
+    const hemisphereLight = new HemisphereLight(0xffffff, 0x080820, 1);
+    scene.add(hemisphereLight);
+    // AmbientLight - add more brightness?
+    const ambientLight = new AmbientLight(0x404040); // soft white light
+    scene.add(ambientLight);
 
-  let models = [];
+    let models = [];
 
-  if (isModelArray) {
-    for (let i = 0; i < selected.models.length; i++) {
-      const model = selected.models[i];
+    if (isModelArray) {
+      for (let i = 0; i < selected.models.length; i++) {
+        const model = selected.models[i];
+        if (model) {
+          scene.add(model);
+          models.push(model);
+        }
+      }
+    } else {
+      const model = await loadModel(selected);
       if (model) {
         scene.add(model);
         models.push(model);
       }
     }
-  } else {
-    const model = await loadModel(selected);
-    if (model) {
-      scene.add(model);
-      models.push(model);
-    }
-  }
 
-  function update() {
-    if(pan)camera.position.set(
-      camera?.position?.x + (pan?.x || 0) || 0,
-      camera?.position?.y + (pan?.y || 0) || 0,
-      10,
-    );
-    console.log("Camera Position", camera?.position)
-    if (isModelArray) {
-      // console.log('updating' + Math.random());
-      for (let i = 0; i < selected.models.length; i++) {
-        if (models[i] && selected.models[i]?.animation) {
-          if (selected.models[i].animation?.rotation?.x) {
-            models[i].rotation.x += selected.models[i].animation?.rotation?.x;
-          }
-          if (selected.models[i].animation?.rotation?.y) {
-            models[i].rotation.y += selected.models[i].animation?.rotation?.y;
-          }
-        }
-      }
-    } else {
-      if (models[0] && selected?.animation) {
-        if (selected.animation?.rotation?.x) {
-          models[0].rotation.x += selected.animation?.rotation?.x;
-        }
-        if (selected.animation?.rotation?.y) {
-          models[0].rotation.y += selected.animation?.rotation?.y;
-        }
-      }
+    function update() {
+      camera.position.set(0, 0, 10 + (scale?._a?._value || 0));
+
+      // console.log("Camera Position", JSON.stringify(camera?.position?.x))
+
+      // console.log(scale, rotateStr, tiltStr);
+      // console.log({...pan?.x});
+      // console.log('Camera poss===', camera.position);
+      // if (isModelArray) {
+      //   // console.log('updating' + Math.random());
+      //   for (let i = 0; i < selected.models.length; i++) {
+      //     if (models[i] && selected.models[i]?.animation) {
+      //       if (selected.models[i].animation?.rotation?.x) {
+      //         models[i].rotation.x += selected.models[i].animation?.rotation?.x;
+      //       }
+      //       if (selected.models[i].animation?.rotation?.y) {
+      //         models[i].rotation.y += selected.models[i].animation?.rotation?.y;
+      //       }
+      //     }
+      //   }
+      // } else {
+      //   if (models[0] && selected?.animation) {
+      //     if (selected.animation?.rotation?.x) {
+      //       models[0].rotation.x += selected.animation?.rotation?.x;
+      //     }
+      //     if (selected.animation?.rotation?.y) {
+      //       models[0].rotation.y += selected.animation?.rotation?.y;
+      //     }
+      //   }
+      // }
     }
-  }
-  // Setup an animation loop
-  const render = () => {
-    requestAnimationFrame(render);
-    update();
-    renderer.render(scene, camera);
-    gl.endFrameEXP();
+    // Setup an animation loop
+    const render = () => {
+      requestAnimationFrame(render);
+      update();
+      renderer.render(scene, camera);
+      gl.endFrameEXP();
+    };
+
+    render();
   };
-
-  render();
-};
-
-const RNThree = props => {
-  const pan = useRef(new Animated.ValueXY()).current;
-  const panResponder = useRef(
-    PanResponder.create(
-      {
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderMove: Animated.event([null, {dx: pan.x, dy: pan.y}], {}),
-        onPanResponderRelease: () => {
-          console.log('thi is pan-------', JSON.stringify(pan));
-          pan.flattenOffset();
-        },
-      },
-      {useNativeDriver: true},
-    ),
-  ).current;
-
   const models = [
     modelOBJ.hamburger,
     modelFBX.icebear,
@@ -294,18 +307,42 @@ const RNThree = props => {
 
       <View style={{flex: 1}}>
         {selected ? (
-          // <OrbitControlsView camera={sceneCamera}>
-          <Animated.View
-            {...panResponder.panHandlers}>
-            <GLView
-              style={{height: 500, width: 500}}
-              onContextCreate={gl => {
-                setGL(gl);
-                onContextCreate(gl, {selected, setSceneCamera,pan});
-              }}
-            />
-          </Animated.View>
+          // <PanGestureHandler
+          //   ref={pan}
+          //   minDist={10}
+          //   minPointers={2}
+          //   maxPointers={2}
+          //   {...panResponder.panHandlers}
+          //   >
+          //   {/* // <OrbitControlsView camera={sceneCamera}> */}
+          // <PinchGestureHandler
+          //   ref={pinch}
+          //   style={{flex: 1}}
+          //   // simultaneousHandlers={pan}
+          //   onGestureEvent={onPinchGestureEvent}
+          //   onHandlerStateChange={onPinchHandlerStateChange}>
+          // <Animated.View
+          //   style={{
+          //     flex: 1,
+          //     backgroundColor: '#ff02',
+          //     // transform: [{translateX: pan.x}, {translateY: pan.y}],
+          //   }}>
+          <GLView
+            style={{
+              flex: 1,
+              minHeight: 500,
+              minWidth: 500,
+              backgroundColor: '#0f07',
+            }}
+            onContextCreate={gl => {
+              setGL(gl);
+              onContextCreate(gl, {selected, setSceneCamera});
+            }}
+          />
         ) : (
+          // </Animated.View>
+          // </PinchGestureHandler>
+          // </PanGestureHandler>
           // </OrbitControlsView>
           <View
             style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
@@ -358,10 +395,11 @@ const RNThree = props => {
                 marginRight: 10,
               }}
               onPress={() => {
-                console.log(
-                  'this is pan from button -------',
-                  JSON.stringify({x: pan.x, y: pan.y}),
-                );
+                console.log('this is pan from button -------', {
+                  scale: scale?._a?._value,
+                  rotateStr,
+                  tiltStr,
+                });
               }}>
               <Text style={{color: '#f00'}}>whatever</Text>
             </TouchableOpacity>
