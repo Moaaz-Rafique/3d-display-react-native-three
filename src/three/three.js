@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import {GLView} from 'expo-gl';
 import {Renderer, TextureLoader} from 'expo-three';
@@ -23,6 +25,7 @@ import {
 import {loadModel} from './utils/3d';
 import OrbitControlsView from 'expo-three-orbit-controls';
 import ExpoRNCamera from './utils/Camera';
+import {useRef} from 'react';
 
 const modelGLB = {
   icebear: {
@@ -162,14 +165,14 @@ const modelFBX = {
 
 onContextCreate = async (gl, data) => {
   // const {setRenderer, setCamera, setScene} = data;
-  const {selected, setSceneCamera} = data;
+  const {selected, setSceneCamera, pan} = data;
   const {drawingBufferWidth: width, drawingBufferHeight: height} = gl;
   const sceneColor = 0x000000;
   // Create a WebGLRenderer without a DOM element
-  const renderer = new Renderer({gl,alpha: true});
+  const renderer = new Renderer({gl, alpha: true});
   renderer.setSize(width, height);
   renderer.setClearColor(0x000000, 0);
-  renderer.setClearAlpha(0)
+  renderer.setClearAlpha(0);
 
   const isModelArray = selected?.models && Array.isArray(selected.models);
 
@@ -182,21 +185,23 @@ onContextCreate = async (gl, data) => {
   } else {
     // use this if wan normal view
     camera = new PerspectiveCamera(75, width / height, 0.1, 1000);
+
     camera.position.set(0, 0, 10);
   }
 
+  // console.log('thi is pan-------', pan.x, pan.y);
   const scene = new Scene();
   setSceneCamera(camera);
-  // const pointLight = new PointLight(0xffffff, 2, 1000, 1);
-  // pointLight.position.set(0, 30, 100);
-  // scene.add(pointLight);
+  const pointLight = new PointLight(0xffffff, 2, 1000, 1);
+  pointLight.position.set(0, 30, 100);
+  scene.add(pointLight);
 
   // HemisphereLight - color feels nicer
   const hemisphereLight = new HemisphereLight(0xffffff, 0x080820, 1);
   scene.add(hemisphereLight);
   // AmbientLight - add more brightness?
-  // const ambientLight = new AmbientLight(0x404040); // soft white light
-  // scene.add(ambientLight);
+  const ambientLight = new AmbientLight(0x404040); // soft white light
+  scene.add(ambientLight);
 
   let models = [];
 
@@ -217,8 +222,14 @@ onContextCreate = async (gl, data) => {
   }
 
   function update() {
+    if(pan)camera.position.set(
+      camera?.position?.x + (pan?.x || 0) || 0,
+      camera?.position?.y + (pan?.y || 0) || 0,
+      10,
+    );
+    console.log("Camera Position", camera?.position)
     if (isModelArray) {
-      console.log('updating' + Math.random());
+      // console.log('updating' + Math.random());
       for (let i = 0; i < selected.models.length; i++) {
         if (models[i] && selected.models[i]?.animation) {
           if (selected.models[i].animation?.rotation?.x) {
@@ -231,7 +242,6 @@ onContextCreate = async (gl, data) => {
       }
     } else {
       if (models[0] && selected?.animation) {
-        // console.log('updating'+Math.random())
         if (selected.animation?.rotation?.x) {
           models[0].rotation.x += selected.animation?.rotation?.x;
         }
@@ -253,6 +263,21 @@ onContextCreate = async (gl, data) => {
 };
 
 const RNThree = props => {
+  const pan = useRef(new Animated.ValueXY()).current;
+  const panResponder = useRef(
+    PanResponder.create(
+      {
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderMove: Animated.event([null, {dx: pan.x, dy: pan.y}], {}),
+        onPanResponderRelease: () => {
+          console.log('thi is pan-------', JSON.stringify(pan));
+          pan.flattenOffset();
+        },
+      },
+      {useNativeDriver: true},
+    ),
+  ).current;
+
   const models = [
     modelOBJ.hamburger,
     modelFBX.icebear,
@@ -270,13 +295,16 @@ const RNThree = props => {
       <View style={{flex: 1}}>
         {selected ? (
           // <OrbitControlsView camera={sceneCamera}>
-          <GLView
-            style={{flex:1}}
-            onContextCreate={gl => {
-              setGL(gl);
-              onContextCreate(gl, {selected, setSceneCamera});
-            }}
-          />
+          <Animated.View
+            {...panResponder.panHandlers}>
+            <GLView
+              style={{height: 500, width: 500}}
+              onContextCreate={gl => {
+                setGL(gl);
+                onContextCreate(gl, {selected, setSceneCamera,pan});
+              }}
+            />
+          </Animated.View>
         ) : (
           // </OrbitControlsView>
           <View
@@ -319,6 +347,25 @@ const RNThree = props => {
               </TouchableOpacity>
             </View>
           ))}
+          <View>
+            <TouchableOpacity
+              style={{
+                borderRadius: 5,
+                borderWidth: 1,
+                borderColor: '#3389c5',
+                backgroundColor: '#3389c5',
+                padding: 10,
+                marginRight: 10,
+              }}
+              onPress={() => {
+                console.log(
+                  'this is pan from button -------',
+                  JSON.stringify({x: pan.x, y: pan.y}),
+                );
+              }}>
+              <Text style={{color: '#f00'}}>whatever</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </View>
     </View>
