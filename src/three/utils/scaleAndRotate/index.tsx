@@ -125,6 +125,21 @@ export class PinchableBox extends React.Component {
                 onGestureEvent={this.onPinchGestureEvent}
                 onHandlerStateChange={this.onPinchHandlerStateChange}>
                 <Animated.View style={styles.container} collapsable={false}>
+                {/* <Animated.Image
+                    style={[
+                      styles.pinchableImage,
+                      {
+                        transform: [
+                          { perspective: 200 },
+                          { scale: this.scale },
+                          { rotate: this.rotateStr },
+                          { rotateX: this.tiltStr },
+                        ],
+                      },
+                    ]}
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    source={require('./swmansion.png')}
+                  /> */}
                   <RNThree scale={this.scale} rotateStr={this.rotateStr} tiltStr={this.tiltStr} />
                 </Animated.View>
               </PinchGestureHandler>

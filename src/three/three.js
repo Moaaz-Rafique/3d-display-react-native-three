@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {GLView} from 'expo-gl';
 import {Renderer, TextureLoader} from 'expo-three';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   AmbientLight,
   BoxBufferGeometry,
@@ -58,6 +58,11 @@ const modelGLB = {
       y: 0,
       z: -2,
     },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+    },
     animation: {
       rotation: {
         y: 0.01, // to animate horizontally
@@ -104,6 +109,11 @@ const modelOBJ = {
       y: 0,
       z: 1,
     },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+    },
     animation: {
       rotation: {
         y: 0.01, // to animate horizontally
@@ -126,6 +136,11 @@ const modelFBX = {
       z: 3,
     },
     position: {
+      x: 0,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
       x: 0,
       y: 0,
       z: 0,
@@ -160,6 +175,11 @@ const modelFBX = {
       x: 0,
       y: 0,
       z: -2,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
     },
     animation: {
       rotation: {
@@ -218,12 +238,8 @@ const RNThree = props => {
       camera.position.set(0, 0, 10);
     }
 
-    // console.log('thi is pan-------', pan.x, pan.y);
     const scene = new Scene();
     setSceneCamera(camera);
-    // const pointLight = new PointLight(0xffffff, 2, 1000, 1);
-    // pointLight.position.set(0, 30, 100);
-    // scene.add(pointLight);
 
     // HemisphereLight - color feels nicer
     const hemisphereLight = new HemisphereLight(0xffffff, 0x080820, 1);
@@ -251,37 +267,12 @@ const RNThree = props => {
     }
 
     function update() {
-      camera.position.set(0, 0, 10 + (scale?._a?._value || 0));
-
-      // console.log("Camera Position", JSON.stringify(camera?.position?.x))
-
-      // console.log(scale, rotateStr, tiltStr);
-      // console.log({...pan?.x});
-      // console.log('Camera poss===', camera.position);
-      // if (isModelArray) {
-      //   // console.log('updating' + Math.random());
-      //   for (let i = 0; i < selected.models.length; i++) {
-      //     if (models[i] && selected.models[i]?.animation) {
-      //       if (selected.models[i].animation?.rotation?.x) {
-      //         models[i].rotation.x += selected.models[i].animation?.rotation?.x;
-      //       }
-      //       if (selected.models[i].animation?.rotation?.y) {
-      //         models[i].rotation.y += selected.models[i].animation?.rotation?.y;
-      //       }
-      //     }
-      //   }
-      // } else {
-      //   if (models[0] && selected?.animation) {
-      //     if (selected.animation?.rotation?.x) {
-      //       models[0].rotation.x += selected.animation?.rotation?.x;
-      //     }
-      //     if (selected.animation?.rotation?.y) {
-      //       models[0].rotation.y += selected.animation?.rotation?.y;
-      //     }
-      //   }
-      // }
+      if (models[0]) {
+        models[0].rotation.z = -rotateStr?._parent?._offset;
+        models[0].scale.x = scale?._a?._value;
+        models[0].scale.y = scale?._a?._value;
+      }
     }
-    // Setup an animation loop
     const render = () => {
       requestAnimationFrame(render);
       update();
@@ -301,32 +292,26 @@ const RNThree = props => {
   const [selected, setSelected] = useState(models[0]);
   const [gl, setGL] = useState(null);
   const [sceneCamera, setSceneCamera] = useState(null);
+  useEffect(() => {
+    const thisModel = selected;
+    if (thisModel) {
+      console.log('sad life=======', thisModel);
+      try {
+        thisModel.rotation.z = -rotateStr?._parent?._offset || 0;
+        thisModel.scale.x = scale?._a?._value || 1;
+        thisModel[0].scale.y = scale?._a?._value || 1;
+        setSelected(thisModel);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  }, [scale, rotateStr]);
   return (
     <View style={styles.container}>
       <SafeAreaView />
 
       <View style={{flex: 1}}>
         {selected ? (
-          // <PanGestureHandler
-          //   ref={pan}
-          //   minDist={10}
-          //   minPointers={2}
-          //   maxPointers={2}
-          //   {...panResponder.panHandlers}
-          //   >
-          //   {/* // <OrbitControlsView camera={sceneCamera}> */}
-          // <PinchGestureHandler
-          //   ref={pinch}
-          //   style={{flex: 1}}
-          //   // simultaneousHandlers={pan}
-          //   onGestureEvent={onPinchGestureEvent}
-          //   onHandlerStateChange={onPinchHandlerStateChange}>
-          // <Animated.View
-          //   style={{
-          //     flex: 1,
-          //     backgroundColor: '#ff02',
-          //     // transform: [{translateX: pan.x}, {translateY: pan.y}],
-          //   }}>
           <GLView
             style={{
               flex: 1,
@@ -340,10 +325,6 @@ const RNThree = props => {
             }}
           />
         ) : (
-          // </Animated.View>
-          // </PinchGestureHandler>
-          // </PanGestureHandler>
-          // </OrbitControlsView>
           <View
             style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
             <Text>Loading...</Text>
@@ -354,8 +335,6 @@ const RNThree = props => {
           showsHorizontalScrollIndicator={false}
           style={{
             flexDirection: 'row',
-            // alignItems: 'center',
-            // justifyContent: 'center',
             position: 'absolute',
             top: 10,
             left: 10,

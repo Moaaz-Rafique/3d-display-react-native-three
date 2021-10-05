@@ -23,3 +23,25 @@ let x = {
         __shouldUpdateListenersForNewNativeTag: true
     }
 }
+let rotate = {
+    _listeners: {},
+    _children: [],
+    _parent:
+    {
+        _listeners: {},
+        _children: [],
+        _value: 0,
+        _startingValue: 0,
+        _offset: -0.14979922735019913,
+        _animation: null,
+        __isNative: true,
+        __nativeTag: 2,
+        __shouldUpdateListenersForNewNativeTag: true
+    },
+    _config:
+    {
+        inputRange: [-100, 100],
+        outputRange: ['-100rad', '100rad']
+    },
+    _interpolation: [Function]
+}
