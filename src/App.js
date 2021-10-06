@@ -5,9 +5,9 @@ import ExpoRNCamera from "./three/utils/Camera";
 import PinchableBox from "./three/utils/scaleAndRotate";
 
 function App(){
-    // return <ExpoRNCamera/>
+    return <ExpoRNCamera/>
     // return <RNThree />
-    return <PinchableBox />
+    // return <PinchableBox />
 }
 
 export default App

@@ -98,7 +98,7 @@ const modelOBJ = {
     name: 'hamburger',
     isometric: false,
     model: require('../models/hamburger/Hamburger.obj'),
-    textures: [{image: require('../models/hamburger/burger.png')}],
+    textures: [{image: require('../models/hamburger/burger.xpng')}],
     scale: {
       x: 0.5,
       y: 0.5,
@@ -271,6 +271,8 @@ const RNThree = props => {
         models[0].rotation.z = -rotateStr?._parent?._offset;
         models[0].scale.x = scale?._a?._value;
         models[0].scale.y = scale?._a?._value;
+        models[0].rotation.y=tiltStr?._parent?._offset
+        console.log('this is tilt------>',tiltStr?._parent?._offset)
       }
     }
     const render = () => {
@@ -283,8 +285,8 @@ const RNThree = props => {
     render();
   };
   const models = [
-    modelOBJ.hamburger,
     modelFBX.icebear,
+    modelOBJ.hamburger,
     modelFBX.shiba,
     modelGLB.icebear,
     modelGLB.box,
@@ -292,20 +294,20 @@ const RNThree = props => {
   const [selected, setSelected] = useState(models[0]);
   const [gl, setGL] = useState(null);
   const [sceneCamera, setSceneCamera] = useState(null);
-  useEffect(() => {
-    const thisModel = selected;
-    if (thisModel) {
-      console.log('sad life=======', thisModel);
-      try {
-        thisModel.rotation.z = -rotateStr?._parent?._offset || 0;
-        thisModel.scale.x = scale?._a?._value || 1;
-        thisModel[0].scale.y = scale?._a?._value || 1;
-        setSelected(thisModel);
-      } catch (err) {
-        console.log(err);
-      }
-    }
-  }, [scale, rotateStr]);
+  // useEffect(() => {
+  //   const thisModel = selected;
+  //   if (thisModel) {
+  //     console.log('sad life=======', thisModel);
+  //     try {
+  //       thisModel.rotation.z = -rotateStr?._parent?._offset || 0;
+  //       thisModel.scale.x = scale?._a?._value || 1;
+  //       thisModel.scale.y = scale?._a?._value || 1;
+  //       setSelected(thisModel);
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   }
+  // }, [scale, rotateStr]);
   return (
     <View style={styles.container}>
       <SafeAreaView />
@@ -317,7 +319,7 @@ const RNThree = props => {
               flex: 1,
               minHeight: 500,
               minWidth: 500,
-              backgroundColor: '#0f07',
+              // backgroundColor: '#0f07',
             }}
             onContextCreate={gl => {
               setGL(gl);
@@ -330,7 +332,7 @@ const RNThree = props => {
             <Text>Loading...</Text>
           </View>
         )}
-        <ScrollView
+        {/* <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           style={{
@@ -339,8 +341,8 @@ const RNThree = props => {
             top: 10,
             left: 10,
             right: 0,
-          }}>
-          {models?.map(x => (
+          }}> */}
+          {/* {models?.map(x => (
             <View key={`${x?.name}-${x?.type}`}>
               <TouchableOpacity
                 style={{
@@ -362,8 +364,8 @@ const RNThree = props => {
                 </Text>
               </TouchableOpacity>
             </View>
-          ))}
-          <View>
+          ))} */}
+          {/* <View>
             <TouchableOpacity
               style={{
                 borderRadius: 5,
@@ -382,8 +384,8 @@ const RNThree = props => {
               }}>
               <Text style={{color: '#f00'}}>whatever</Text>
             </TouchableOpacity>
-          </View>
-        </ScrollView>
+          </View> */}
+        {/* </ScrollView> */}
       </View>
     </View>
   );
